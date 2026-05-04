@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Zenith - v1.6</title>
+    <title>Project Zenith - v1.7</title>
     <style>
         body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: #e0eaf5; }
         
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: rgba(240, 248, 255, 0.9); z-index: 10; }
         
         .menu-panel { text-align: center; color: #2c3e50; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 420px; display: none; }
-        #start-menu { display: block; } /* Visible by default */
+        #start-menu { display: block; }
         
         button { background: #3498db; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-size: 1rem; margin-top: 10px; font-weight: bold; width: 100%; transition: background 0.2s; }
         button:hover { background: #2980b9; }
@@ -32,10 +32,10 @@
     <div id="ui-layer">
         <div id="start-menu" class="menu-panel">
             <h1>Project: Zenith</h1>
-            <p>v1.6 Verticality Update</p>
+            <p>W,A,S,D to move. SHIFT to sprint.<br>SPACE to jump. Click to fire.</p>
             <button id="play-btn">PLAY</button>
             <button id="settings-btn" class="secondary">SETTINGS</button>
-            <span class="version">Version 1.6</span>
+            <span class="version">Version 1.7 - Sprint & Collision Fix</span>
         </div>
 
         <div id="settings-main-menu" class="menu-panel">
@@ -84,7 +84,7 @@
         let score = 0, prevTime = performance.now();
         const velocity = new THREE.Vector3(), direction = new THREE.Vector3();
         
-        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, canJump = false;
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, canJump = false, isSprinting = false;
         
         // Settings State
         let JUMP_FORCE = 125;
@@ -92,7 +92,7 @@
         let PROJ_COLOR = 0xe74c3c;
         const PLAYER_HEIGHT = 10;
         const GRAVITY = 9.8 * 50.0;
-        const PLAYER_RADIUS = 3; // Used for collision
+        const PLAYER_RADIUS = 3;
 
         init();
         animate();
@@ -119,7 +119,6 @@
             const physicsMenu = document.getElementById('physics-menu');
             const visualsMenu = document.getElementById('visuals-menu');
 
-            // Navigation
             document.getElementById('play-btn').onclick = () => controls.lock();
             document.getElementById('settings-btn').onclick = () => { startMenu.style.display='none'; settingsMainMenu.style.display='block'; };
             document.getElementById('open-physics').onclick = () => { settingsMainMenu.style.display='none'; physicsMenu.style.display='block'; };
@@ -127,12 +126,10 @@
             document.getElementById('back-to-main').onclick = () => { settingsMainMenu.style.display='none'; startMenu.style.display='block'; };
             document.querySelectorAll('.back-to-settings').forEach(b => b.onclick = () => { physicsMenu.style.display='none'; visualsMenu.style.display='none'; settingsMainMenu.style.display='block'; });
 
-            // Inputs
             document.getElementById('jump-slider').oninput = (e) => { JUMP_FORCE = parseFloat(e.target.value); document.getElementById('jump-val').innerText = e.target.value; };
             document.getElementById('target-color-picker').oninput = (e) => { TARGET_COLOR = parseInt(e.target.value.replace('#','0x')); updateTargetColors(); };
             document.getElementById('proj-color-picker').oninput = (e) => { PROJ_COLOR = parseInt(e.target.value.replace('#','0x')); };
 
-            // Control Locking
             controls.addEventListener('lock', () => { uiLayer.style.display = 'none'; document.getElementById('crosshair').style.display = 'block'; document.getElementById('score-ui').style.display = 'block'; });
             controls.addEventListener('unlock', () => { uiLayer.style.display = 'flex'; document.getElementById('crosshair').style.display = 'none'; document.getElementById('score-ui').style.display = 'none'; });
 
@@ -140,10 +137,25 @@
 
             // Movement Inputs
             document.addEventListener('keydown', (e) => {
-                switch(e.code){ case 'KeyW': moveForward=true; break; case 'KeyA': moveLeft=true; break; case 'KeyS': moveBackward=true; break; case 'KeyD': moveRight=true; break; case 'Space': if(canJump) velocity.y += JUMP_FORCE; canJump=false; break; }
+                switch(e.code){ 
+                    case 'KeyW': moveForward=true; break; 
+                    case 'KeyA': moveLeft=true; break; 
+                    case 'KeyS': moveBackward=true; break; 
+                    case 'KeyD': moveRight=true; break; 
+                    case 'Space': if(canJump) velocity.y += JUMP_FORCE; canJump=false; break; 
+                    case 'ShiftLeft': 
+                    case 'ShiftRight': isSprinting=true; break;
+                }
             });
             document.addEventListener('keyup', (e) => {
-                switch(e.code){ case 'KeyW': moveForward=false; break; case 'KeyA': moveLeft=false; break; case 'KeyS': moveBackward=false; break; case 'KeyD': moveRight=false; break; }
+                switch(e.code){ 
+                    case 'KeyW': moveForward=false; break; 
+                    case 'KeyA': moveLeft=false; break; 
+                    case 'KeyS': moveBackward=false; break; 
+                    case 'KeyD': moveRight=false; break; 
+                    case 'ShiftLeft': 
+                    case 'ShiftRight': isSprinting=false; break;
+                }
             });
             document.addEventListener('mousedown', shoot);
 
@@ -179,21 +191,18 @@
         }
 
         function buildWorld() {
-            // Floor
             const floor = new THREE.Mesh(new THREE.PlaneGeometry(500,500,50,50), new THREE.MeshBasicMaterial({color:0xbdc3c7, wireframe:true}));
             floor.rotateX(-Math.PI/2); scene.add(floor);
             
-            // Random Sized Buildings
             const pillarMat = new THREE.MeshPhongMaterial({ color: 0x95a5a6 });
             for(let i=0; i<30; i++){
-                const w = Math.random() * 20 + 10; // Width: 10-30
-                const h = Math.random() * 35 + 5;  // Height: 5-40 (Some jumpable, some not)
-                const d = Math.random() * 20 + 10; // Depth: 10-30
+                const w = Math.random() * 20 + 10; 
+                const h = Math.random() * 35 + 5;  
+                const d = Math.random() * 20 + 10; 
 
                 const pillarGeo = new THREE.BoxGeometry(w, h, d);
                 const pillar = new THREE.Mesh(pillarGeo, pillarMat);
                 
-                // Position Y at half height so it sits perfectly on the floor
                 pillar.position.set((Math.random()-0.5)*300, h/2, (Math.random()-0.5)*300);
                 scene.add(pillar); 
                 obstacles.push(pillar);
@@ -205,7 +214,6 @@
 
         function spawnSingleTarget() {
             const box = new THREE.Mesh(new THREE.BoxGeometry(4,4,4), new THREE.MeshPhongMaterial({color: TARGET_COLOR, flatShading:true}));
-            // Spawn them slightly higher so they aren't hidden inside tall buildings
             box.position.set((Math.random()-0.5)*300, Math.random()*20+20, (Math.random()-0.5)*300);
             box.userData = { baseY: box.position.y, hoverSpeed: Math.random()*2+1, hoverOffset: Math.random()*Math.PI*2, rot: Math.random()*0.02 };
             scene.add(box); targets.push(box);
@@ -214,8 +222,6 @@
         function shoot() {
             if(!controls.isLocked) return;
             const projectile = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshBasicMaterial({ color: PROJ_COLOR }));
-            
-            // Fire from the exact camera position (crosshair origin)
             projectile.position.copy(controls.getObject().position); 
             
             const aim = new THREE.Vector3(); camera.getWorldDirection(aim);
@@ -227,10 +233,8 @@
             requestAnimationFrame(animate);
             const time = performance.now(), delta = (time - prevTime)/1000;
             
-            // Floating Targets
             targets.forEach(t => { t.position.y = t.userData.baseY + Math.sin(time/1000 * t.userData.hoverSpeed + t.userData.hoverOffset)*5; t.rotation.y += t.userData.rot; });
 
-            // Particles Processing
             for(let i=particles.length-1; i>=0; i--){
                 const p = particles[i];
                 p.position.add(p.userData.velocity.clone().multiplyScalar(delta));
@@ -239,7 +243,6 @@
                 if(p.userData.lifespan <= 0) { scene.remove(p); particles.splice(i,1); }
             }
 
-            // Projectiles Processing
             for (let i = activeProjectiles.length - 1; i >= 0; i--) {
                 const p = activeProjectiles[i];
                 p.position.add(p.userData.velocity.clone().multiplyScalar(delta));
@@ -247,10 +250,8 @@
                 let hit = false;
                 const pBB = new THREE.Box3().setFromObject(p);
                 
-                // Obstacle Hit
                 for (let bb of obstacleBBs) { if (pBB.intersectsBox(bb)) { hit = true; break; } }
                 
-                // Target Hit
                 if (!hit) {
                     for (let j = 0; j < targets.length; j++) {
                         if (pBB.intersectsBox(new THREE.Box3().setFromObject(targets[j]))) {
@@ -261,11 +262,9 @@
                         }
                     }
                 }
-                // Destroy projectile
                 if (hit || p.userData.lifespan <= 0) { scene.remove(p); activeProjectiles.splice(i, 1); }
             }
 
-            // Player Physics & Movement
             if(controls.isLocked){
                 velocity.x -= velocity.x * 10.0 * delta; 
                 velocity.z -= velocity.z * 10.0 * delta;
@@ -275,26 +274,27 @@
                 direction.x = Number(moveRight) - Number(moveLeft);
                 direction.normalize();
                 
-                const speed = 200.0;
-                if(moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
-                if(moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
+                // SPRINT LOGIC IMPLEMENTED HERE
+                const baseSpeed = 200.0;
+                const activeSpeed = isSprinting ? baseSpeed * 1.8 : baseSpeed;
+
+                if(moveForward || moveBackward) velocity.z -= direction.z * activeSpeed * delta;
+                if(moveLeft || moveRight) velocity.x -= direction.x * activeSpeed * delta;
                 
-                // 1. Horizontal Movement & Collision
                 const prevX = controls.getObject().position.x;
                 const prevZ = controls.getObject().position.z;
                 
                 controls.moveRight(-velocity.x * delta); 
                 controls.moveForward(-velocity.z * delta);
                 
-                // Check horizontal overlap (using a box that represents the player's body from head to toe)
+                // COLLISION FIX: Offset the bottom of the bounding box up by 0.2 to stop scraping the top of pillars
                 let playerBB = new THREE.Box3().setFromCenterAndSize(
-                    controls.getObject().position.clone().setY(controls.getObject().position.y - PLAYER_HEIGHT/2), 
-                    new THREE.Vector3(PLAYER_RADIUS * 2, PLAYER_HEIGHT, PLAYER_RADIUS * 2)
+                    controls.getObject().position.clone().setY(controls.getObject().position.y - PLAYER_HEIGHT/2 + 0.1), 
+                    new THREE.Vector3(PLAYER_RADIUS * 2, PLAYER_HEIGHT - 0.2, PLAYER_RADIUS * 2)
                 );
 
                 for(let bb of obstacleBBs){ 
                     if(playerBB.intersectsBox(bb)){ 
-                        // Revert horizontal movement
                         controls.getObject().position.x = prevX;
                         controls.getObject().position.z = prevZ;
                         velocity.x = 0; velocity.z = 0; 
@@ -302,10 +302,9 @@
                     } 
                 }
 
-                // 2. Vertical Movement & Collision
                 controls.getObject().position.y += (velocity.y * delta);
                 
-                // Re-evaluate bounding box after moving vertically
+                // Reset box size for strict vertical landing checks
                 playerBB.setFromCenterAndSize(
                     controls.getObject().position.clone().setY(controls.getObject().position.y - PLAYER_HEIGHT/2), 
                     new THREE.Vector3(PLAYER_RADIUS * 2, PLAYER_HEIGHT, PLAYER_RADIUS * 2)
@@ -315,12 +314,10 @@
                 for(let bb of obstacleBBs){
                     if(playerBB.intersectsBox(bb)){
                         if(velocity.y < 0) {
-                            // Falling down onto an object: Snap to the top
                             controls.getObject().position.y = bb.max.y + PLAYER_HEIGHT;
                             velocity.y = 0;
                             onGround = true;
                         } else if (velocity.y > 0) {
-                            // Jumping up into the bottom of an object: Bump head
                             controls.getObject().position.y = bb.min.y;
                             velocity.y = 0;
                         }
@@ -328,7 +325,6 @@
                     }
                 }
 
-                // Global Floor Check
                 if(controls.getObject().position.y <= PLAYER_HEIGHT){ 
                     velocity.y = 0; 
                     controls.getObject().position.y = PLAYER_HEIGHT; 
