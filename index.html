@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Zenith - v3.0</title>
+    <title>Project Zenith - v3.6</title>
     <style>
         body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: #87CEEB; }
+        
+        /* Main UI Menus */
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: rgba(2, 6, 23, 0.9); z-index: 10; }
         .menu-panel { text-align: center; color: #f8fafc; background: #0f172a; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 440px; display: none; border: 1px solid #1e293b; }
         #start-menu { display: block; }
@@ -17,9 +19,8 @@
         h1 { margin: 0 0 10px 0; color: #38bdf8; }
         .version { font-size: 0.8rem; color: #64748b; margin-top: 15px; display: block; }
         
+        /* HUD Elements */
         #crosshair { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: #ef4444; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; display: none; z-index: 5; box-shadow: 0 0 5px rgba(239, 68, 68, 0.8); transition: opacity 0.2s; }
-        
-        /* New 2D Scope Overlay */
         #scope-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: none; z-index: 6; background: radial-gradient(circle, transparent 35%, rgba(0,0,0,0.95) 70%, black 100%); }
         #scope-crosshair-x { position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: rgba(0, 0, 0, 0.8); transform: translateY(-50%); }
         #scope-crosshair-y { position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(0, 0, 0, 0.8); transform: translateX(-50%); }
@@ -29,12 +30,24 @@
         #hp-bar-container { width: 150px; height: 10px; background: #334155; border-radius: 5px; margin-top: 5px; overflow: hidden; }
         #hp-bar-fill { width: 100%; height: 100%; background: #ef4444; transition: width 0.3s; }
         
+        /* Weapon HUD */
+        #weapon-hud { position: absolute; bottom: 20px; right: 20px; color: #38bdf8; font-weight: bold; display: none; z-index: 5; background: rgba(15, 23, 42, 0.8); padding: 15px 25px; border-radius: 8px; border: 1px solid #1e293b; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Kill Effects */
         #kill-feed { position: absolute; top: 20px; right: 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; z-index: 5; pointer-events: none; }
         .kill-msg { background: rgba(15, 23, 42, 0.8); color: #f8fafc; padding: 6px 15px; border-radius: 4px; border-right: 4px solid #ef4444; font-size: 0.9rem; font-weight: bold; animation: slideOut 3.5s forwards; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         @keyframes slideOut { 0% { opacity: 0; transform: translateX(20px); } 10% { opacity: 1; transform: translateX(0); } 80% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(20px); } }
         #kill-popup { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); font-size: 2.2rem; color: #ef4444; font-weight: bold; text-shadow: 0 0 15px rgba(239, 68, 68, 0.9); opacity: 0; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 5; pointer-events: none; letter-spacing: 2px; }
         #kill-popup.show { opacity: 1; transform: translate(-50%, -20px) scale(1.1); }
         
+        /* Death Screen */
+        #death-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
+        #death-screen h1 { font-size: 5rem; color: #ef4444; text-transform: uppercase; margin-bottom: 10px; text-shadow: 0 0 20px rgba(239, 68, 68, 0.5); letter-spacing: 5px; }
+        #death-screen h2 { color: #f8fafc; font-size: 1.5rem; margin-bottom: 30px; font-weight: normal; }
+        .death-stats { background: rgba(2, 6, 23, 0.8); padding: 20px 40px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 40px; color: #38bdf8; font-size: 1.5rem; font-weight: bold; display: flex; gap: 40px; }
+        .respawn-btn { background: #ef4444; color: white; border: none; padding: 15px 50px; font-size: 1.5rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4); }
+        .respawn-btn:hover { background: #dc2626; transform: scale(1.05); }
+
         .setting-row { margin: 15px 0; text-align: left; display: flex; justify-content: space-between; align-items: center; }
         input[type=range] { width: 50%; cursor: pointer; }
         .weapon-btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
@@ -47,7 +60,7 @@
             <p>Zombie Survival Protocol</p>
             <button id="play-btn">START SIMULATION</button>
             <button id="settings-btn" class="secondary">SETTINGS HUB</button>
-            <span class="version">Version 3.0</span>
+            <span class="version">Version 3.6 - Pistol ADS Fix</span>
         </div>
 
         <div id="settings-main-menu" class="menu-panel">
@@ -71,11 +84,11 @@
         <div id="arsenal-menu" class="menu-panel">
             <h1>Arsenal</h1>
             <div class="weapon-btn-grid">
-                <button class="wep-select" data-idx="0">Recon Pistol</button>
-                <button class="wep-select" data-idx="1">Stinger SMG</button>
-                <button class="wep-select" data-idx="2">Hyper-Rail</button>
-                <button class="wep-select" data-idx="3">Nova Launcher</button>
-                <button class="wep-select" style="grid-column: span 2;" data-idx="4">Ranger Sniper</button>
+                <button class="wep-select" data-idx="0">[1] Recon Pistol</button>
+                <button class="wep-select" data-idx="1">[2] Stinger SMG</button>
+                <button class="wep-select" data-idx="2">[5] Hyper-Rail</button>
+                <button class="wep-select" data-idx="3">[4] Nova Launcher</button>
+                <button class="wep-select" style="grid-column: span 2;" data-idx="4">[3] Ranger Sniper</button>
             </div>
             <button class="back-to-settings secondary" style="margin-top:20px;">BACK</button>
         </div>
@@ -103,6 +116,16 @@
         </div>
     </div>
 
+    <div id="death-screen">
+        <h1>SYSTEM CRITICAL</h1>
+        <h2>You were eliminated by the horde.</h2>
+        <div class="death-stats">
+            <div>FINAL SCORE: <span id="death-score-val" style="color:#f8fafc;">0</span></div>
+            <div>TOTAL KILLS: <span id="death-kills-val" style="color:#f8fafc;">0</span></div>
+        </div>
+        <button class="respawn-btn" id="respawn-btn">INITIALIZE RESPAWN</button>
+    </div>
+
     <div id="crosshair"></div>
     <div id="scope-overlay">
         <div id="scope-crosshair-x"></div>
@@ -119,6 +142,8 @@
         <div id="hp-bar-container"><div id="hp-bar-fill"></div></div>
     </div>
 
+    <div id="weapon-hud">[1] PISTOL</div>
+
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
     <script type="importmap"> { "imports": { "three": "https://unpkg.com/three@0.150.1/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/" } } </script>
 
@@ -126,12 +151,13 @@
         import * as THREE from 'three';
         import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
+        // FIXED PISTOL adsY BACK TO -0.38 for proper iron sight notch alignment
         const WEAPONS = [
-            { name: "Pistol", fireRate: 350, projSpeed: 600, size: 0.3, modelColor: 0x64748b, scale: 1, auto: false, zoom: 1.3, sight: 'dot', damage: 20, adsZ: -0.8 },
-            { name: "SMG", fireRate: 80, projSpeed: 700, size: 0.15, modelColor: 0x334155, scale: 0.8, auto: true, zoom: 1.2, sight: 'dot', damage: 10, adsZ: -0.8 },
-            { name: "Rail", fireRate: 1200, projSpeed: 3000, size: 0.1, modelColor: 0x0ea5e9, scale: 1.2, auto: false, zoom: 2.0, sight: 'scope', damage: 100, adsZ: -0.55 },
-            { name: "Nova", fireRate: 1500, projSpeed: 150, size: 1.2, modelColor: 0xf59e0b, scale: 1.5, auto: false, zoom: 1.1, sight: 'none', damage: 75, adsZ: -1.0 },
-            { name: "Sniper", fireRate: 1800, projSpeed: 4000, size: 0.2, modelColor: 0x10b981, scale: 1.8, auto: false, zoom: 4.0, sight: 'scope', damage: 60, adsZ: -0.55 }
+            { name: "Pistol", fireRate: 350, projSpeed: 600, size: 0.3, modelColor: 0x64748b, scale: 1.0, auto: false, zoom: 1.3, sight: 'iron', damage: 20, adsY: -0.38, adsZ: -0.8 },
+            { name: "SMG", fireRate: 80, projSpeed: 700, size: 0.15, modelColor: 0x334155, scale: 0.8, auto: true, zoom: 1.2, sight: 'reflex', damage: 10, adsY: -0.36, adsZ: -0.8 },
+            { name: "Rail", fireRate: 1200, projSpeed: 3000, size: 0.1, modelColor: 0x0ea5e9, scale: 1.2, auto: false, zoom: 2.0, sight: 'scope', damage: 100, adsY: -0.42, adsZ: -0.55 },
+            { name: "Nova", fireRate: 1500, projSpeed: 150, size: 1.2, modelColor: 0xf59e0b, scale: 1.5, auto: false, zoom: 1.1, sight: 'none', damage: 75, adsY: -0.60, adsZ: -1.2 },
+            { name: "Sniper", fireRate: 1800, projSpeed: 4000, size: 0.2, modelColor: 0x10b981, scale: 1.8, auto: false, zoom: 4.0, sight: 'scope', damage: 60, adsY: -0.63, adsZ: -0.55 }
         ];
 
         let camera, scene, renderer, controls, raycaster, barrelTip;
@@ -140,9 +166,10 @@
         const velocity = new THREE.Vector3(), direction = new THREE.Vector3();
         
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, canJump = false, isSprinting = false;
-        let isShooting = false, justClicked = false, isADS = false, killPopupTimeout;
+        let isShooting = false, justClicked = false, isADS = false, isDead = false, killPopupTimeout;
 
-        let currentWeaponIdx = 0, viewmodelGroup, sightDotGroup, sightScopeGroup, JUMP_FORCE = 80, SENSITIVITY = 1.0, TARGET_COLOR = 0x3498db, PROJ_COLOR = 0xef4444, HP_ENABLED = true;
+        let currentWeaponIdx = 0, viewmodelGroup, sightIronGroup, sightReflexGroup, sightScopeGroup;
+        let JUMP_FORCE = 80, SENSITIVITY = 1.0, TARGET_COLOR = 0x3498db, PROJ_COLOR = 0xef4444, HP_ENABLED = true;
         const PLAYER_HEIGHT = 10, GRAVITY = 200.0, PLAYER_RADIUS = 3, STEP_OFFSET = 2.1, BASE_FOV = 75;
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -179,26 +206,46 @@
 
             raycaster = new THREE.Raycaster();
 
-            // Build Viewmodel
+            // Build Viewmodel Base
             viewmodelGroup = new THREE.Group();
-            
-            const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 2), new THREE.MeshPhongMaterial({ color: 0x334155 }));
+            const bodyMat = new THREE.MeshPhongMaterial({ color: 0x334155 });
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 2), bodyMat);
             const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 1.5), new THREE.MeshPhongMaterial({ color: 0x1e293b }));
             barrel.rotation.x = Math.PI / 2; barrel.position.z = -1;
             viewmodelGroup.add(body, barrel);
             
-            sightDotGroup = new THREE.Group();
-            const rdBase = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshPhongMaterial({color: 0x111111}));
-            rdBase.position.y = 0.35;
-            const rdDot = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.05), new THREE.MeshBasicMaterial({color: 0xff0000}));
-            rdDot.position.set(0, 0.35, -0.1); 
-            sightDotGroup.add(rdBase, rdDot);
-            viewmodelGroup.add(sightDotGroup);
+            const opticsMat = new THREE.MeshPhongMaterial({color: 0x111111});
 
-            // Reverted scope to solid exterior because we will hide it when zooming
+            // 1. IRON SIGHTS Component
+            sightIronGroup = new THREE.Group();
+            const rearL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.15, 0.1), opticsMat);
+            rearL.position.set(-0.06, 0.3, 0.8);
+            const rearR = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.15, 0.1), opticsMat);
+            rearR.position.set(0.06, 0.3, 0.8);
+            const frontSight = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.15, 0.1), opticsMat);
+            frontSight.position.set(0, 0.3, -0.8);
+            sightIronGroup.add(rearL, rearR, frontSight);
+            viewmodelGroup.add(sightIronGroup);
+
+            // 2. REFLEX SIGHT Component (Red Dot)
+            sightReflexGroup = new THREE.Group();
+            const reflexBase = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.3), opticsMat);
+            reflexBase.position.set(0, 0.3, 0);
+            const reflexFrameGeom = new THREE.CylinderGeometry(0.12, 0.12, 0.05, 16, 1, true); 
+            const reflexFrameMat = new THREE.MeshPhongMaterial({color: 0x111111, side: THREE.DoubleSide});
+            const reflexFrame = new THREE.Mesh(reflexFrameGeom, reflexFrameMat);
+            reflexFrame.rotation.x = Math.PI / 2;
+            reflexFrame.position.set(0, 0.45, 0);
+            const reflexDotMat = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0.7});
+            const reflexDot = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.008, 0.008), reflexDotMat);
+            reflexDot.position.set(0, 0.45, 0); 
+            sightReflexGroup.add(reflexBase, reflexFrame, reflexDot);
+            viewmodelGroup.add(sightReflexGroup);
+
+            // 3. SNIPER SCOPE Component
             sightScopeGroup = new THREE.Group();
-            const scTubeGeom = new THREE.CylinderGeometry(0.12, 0.12, 1.2, 16); 
-            const scTubeMat = new THREE.MeshPhongMaterial({color: 0x0a0a0a}); 
+            const scTubeGeom = new THREE.CylinderGeometry(0.12, 0.12, 1.2, 16, 1, true); 
+            const scTubeMat = new THREE.MeshPhongMaterial({color: 0x0a0a0a, side: THREE.DoubleSide}); 
             const scTube = new THREE.Mesh(scTubeGeom, scTubeMat);
             scTube.rotation.x = Math.PI/2;
             scTube.position.y = 0.35; 
@@ -214,7 +261,7 @@
 
             // UI logic
             const showPanel = (id) => { document.querySelectorAll('.menu-panel').forEach(p => p.style.display = 'none'); document.getElementById(id).style.display = 'block'; };
-            document.getElementById('play-btn').onclick = () => { controls.lock(); audioCtx.resume(); if(playerHP <=0) resetGame(); };
+            document.getElementById('play-btn').onclick = () => { controls.lock(); audioCtx.resume(); };
             document.getElementById('settings-btn').onclick = () => showPanel('settings-main-menu');
             document.getElementById('open-general').onclick = () => showPanel('general-menu');
             document.getElementById('open-arsenal').onclick = () => { showPanel('arsenal-menu'); updateArsenalUI(); };
@@ -228,10 +275,48 @@
             document.getElementById('hp-toggle').onchange = (e) => { HP_ENABLED = e.target.checked; };
             document.querySelectorAll('.wep-select').forEach(b => b.onclick = (e) => { currentWeaponIdx = parseInt(e.target.dataset.idx); updateArsenalUI(); updateViewmodel(); });
 
-            controls.addEventListener('lock', () => { document.getElementById('ui-layer').style.display = 'none'; document.getElementById('crosshair').style.display = 'block'; document.getElementById('stats-ui').style.display = 'block'; });
-            controls.addEventListener('unlock', () => { document.getElementById('ui-layer').style.display = 'flex'; document.getElementById('crosshair').style.display = 'none'; isShooting = false; isADS = false; });
+            document.getElementById('respawn-btn').onclick = () => {
+                document.getElementById('death-screen').style.display = 'none';
+                resetGame();
+                isDead = false;
+                controls.lock();
+            };
 
-            document.addEventListener('keydown', (e) => { switch(e.code){ case 'KeyW': moveForward=true; break; case 'KeyA': moveLeft=true; break; case 'KeyS': moveBackward=true; break; case 'KeyD': moveRight=true; break; case 'Space': if(canJump) velocity.y += JUMP_FORCE; canJump=false; break; case 'ShiftLeft': isSprinting=true; break; } });
+            controls.addEventListener('lock', () => { 
+                document.getElementById('ui-layer').style.display = 'none'; 
+                document.getElementById('stats-ui').style.display = 'block'; 
+                document.getElementById('weapon-hud').style.display = 'block';
+                
+                const wep = WEAPONS[currentWeaponIdx];
+                if (!(isADS && (wep.sight === 'scope' || wep.sight === 'iron' || wep.sight === 'reflex'))) {
+                    document.getElementById('crosshair').style.display = 'block'; 
+                }
+            });
+            
+            controls.addEventListener('unlock', () => { 
+                if (!isDead) document.getElementById('ui-layer').style.display = 'flex'; 
+                document.getElementById('crosshair').style.display = 'none'; 
+                document.getElementById('scope-overlay').style.display = 'none';
+                document.getElementById('weapon-hud').style.display = 'none';
+                isShooting = false; 
+                isADS = false; 
+            });
+
+            document.addEventListener('keydown', (e) => { 
+                switch(e.code){ 
+                    case 'KeyW': moveForward=true; break; 
+                    case 'KeyA': moveLeft=true; break; 
+                    case 'KeyS': moveBackward=true; break; 
+                    case 'KeyD': moveRight=true; break; 
+                    case 'Space': if(canJump) velocity.y += JUMP_FORCE; canJump=false; break; 
+                    case 'ShiftLeft': isSprinting=true; break; 
+                    case 'Digit1': currentWeaponIdx = 0; updateArsenalUI(); updateViewmodel(); break; 
+                    case 'Digit2': currentWeaponIdx = 1; updateArsenalUI(); updateViewmodel(); break; 
+                    case 'Digit3': currentWeaponIdx = 4; updateArsenalUI(); updateViewmodel(); break; 
+                    case 'Digit4': currentWeaponIdx = 3; updateArsenalUI(); updateViewmodel(); break; 
+                    case 'Digit5': currentWeaponIdx = 2; updateArsenalUI(); updateViewmodel(); break; 
+                } 
+            });
             document.addEventListener('keyup', (e) => { switch(e.code){ case 'KeyW': moveForward=false; break; case 'KeyA': moveLeft=false; break; case 'KeyS': moveBackward=false; break; case 'KeyD': moveRight=false; break; case 'ShiftLeft': isSprinting=false; break; } });
             
             document.addEventListener('mousedown', (e) => { 
@@ -258,8 +343,12 @@
             viewmodelGroup.scale.setScalar(wep.scale); 
             viewmodelGroup.children[0].material.color.setHex(wep.modelColor); 
             
-            sightDotGroup.visible = (wep.sight === 'dot');
+            sightIronGroup.visible = (wep.sight === 'iron');
+            sightReflexGroup.visible = (wep.sight === 'reflex');
             sightScopeGroup.visible = (wep.sight === 'scope');
+
+            const mapping = {0: 1, 1: 2, 4: 3, 3: 4, 2: 5};
+            document.getElementById('weapon-hud').innerText = `[${mapping[currentWeaponIdx]}] ${wep.name}`;
         }
 
         function addMapProp(x, y, z, w, h, d, color = 0x94a3b8) {
@@ -320,7 +409,31 @@
         function resetGame() {
             playerHP = 100; score = 0; kills = 0;
             updateUI();
+            
+            enemies.forEach(e => scene.remove(e)); enemies.length = 0;
+            targets.forEach(t => scene.remove(t)); targets.length = 0;
+            
+            for(let i=0; i<25; i++) spawnEnemy((Math.random()-0.5)*800, (Math.random()-0.5)*800);
+            for(let i=0; i<40; i++) spawnTarget();
+
             controls.getObject().position.set(0, 50, 200); 
+        }
+
+        function handleDeath() {
+            if (isDead) return;
+            isDead = true;
+            controls.unlock();
+            
+            document.getElementById('death-score-val').innerText = score;
+            document.getElementById('death-kills-val').innerText = kills;
+            document.getElementById('death-screen').style.display = 'flex';
+            
+            document.getElementById('ui-layer').style.display = 'none';
+            document.getElementById('crosshair').style.display = 'none';
+            document.getElementById('scope-overlay').style.display = 'none';
+            document.getElementById('weapon-hud').style.display = 'none';
+            
+            playSound(100, 'sawtooth', 1.0); 
         }
 
         function updateUI() {
@@ -405,7 +518,7 @@
             const time = performance.now(), delta = (time - prevTime)/1000;
             prevTime = time;
 
-            if (controls.isLocked) {
+            if (controls.isLocked && !isDead) {
                 const wep = WEAPONS[currentWeaponIdx];
                 const targetFOV = isADS ? BASE_FOV / wep.zoom : BASE_FOV;
                 camera.fov = THREE.MathUtils.lerp(camera.fov, targetFOV, 0.15);
@@ -415,7 +528,6 @@
                 const scopeOverlay = document.getElementById('scope-overlay');
                 const defaultCrosshair = document.getElementById('crosshair');
 
-                // SCOPE OVERLAY FIX: Hide the 3D gun and use CSS overlay when zooming with scoped weapons
                 if (isADS && wep.sight === 'scope') {
                     viewmodelGroup.visible = false;
                     scopeOverlay.style.display = 'block';
@@ -424,20 +536,19 @@
                     viewmodelGroup.visible = true;
                     scopeOverlay.style.display = 'none';
                     
-                    // Viewmodel Alignment for non-scoped weapons (or when hip-firing scoped weapons)
-                    const adsYOffset = wep.sight !== 'none' ? -0.35 : -0.25; 
-                    const vmTarget = isADS ? new THREE.Vector3(0, adsYOffset, wep.adsZ) : new THREE.Vector3(0.8, -0.6, -1.5);
+                    const vmTarget = isADS ? new THREE.Vector3(0, wep.adsY, wep.adsZ) : new THREE.Vector3(0.8, -0.6, -1.5);
                     viewmodelGroup.position.lerp(vmTarget, 0.15);
                     
-                    defaultCrosshair.style.display = 'block';
-                    defaultCrosshair.style.opacity = isADS ? "0.2" : "1";
+                    if (isADS && (wep.sight === 'iron' || wep.sight === 'reflex')) {
+                        defaultCrosshair.style.display = 'none';
+                    } else {
+                        defaultCrosshair.style.display = 'block';
+                        defaultCrosshair.style.opacity = isADS ? "0.2" : "1";
+                    }
                 }
 
                 if (isShooting && (wep.auto || justClicked)) {
-                    // Always fire relative to camera center now for precise aiming
                     const start = new THREE.Vector3(); 
-                    
-                    // If we are hiding the gun model, we still need to calculate a start position
                     if (!viewmodelGroup.visible) {
                         start.copy(controls.getObject().position);
                     } else {
@@ -473,7 +584,7 @@
                                 if (HP_ENABLED) {
                                     playerHP -= 20; updateUI();
                                     playSound(150, 'sawtooth', 0.2); 
-                                    if (playerHP <= 0) { controls.unlock(); alert("SYSTEM CRITICAL: You were eliminated by the horde. Click OK to restart."); }
+                                    if (playerHP <= 0) handleDeath();
                                 }
                                 enemy.userData.lastAttack = time;
                             }
